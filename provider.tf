@@ -19,7 +19,7 @@ terraform {
 }
 
 locals {
-  acme_server_url = var.environment == "production" ? "https://acme-v02.api.letsencrypt.org/directory" : "https://acme-staging-v02.api.letsencrypt.org/directory"
+  acme_server_url = var.acme_environment == "production" ? "https://acme-v02.api.letsencrypt.org/directory" : "https://acme-staging-v02.api.letsencrypt.org/directory"
 }
 
 provider "acme" {
