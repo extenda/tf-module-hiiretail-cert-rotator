@@ -1,23 +1,23 @@
 resource acme_registration reg {
-  email_address   = "itcontracts+acme-certs-module@extendaretail.com"
+  email_address   = var.acme_email_address
 }
 
 resource acme_certificate certificate {
   account_key_pem           = acme_registration.reg.account_key_pem
   common_name               = var.common_name
   subject_alternative_names = var.subject_alternative_names
-  min_days_remaining = 30
+  min_days_remaining = var.acme_cert_min_days_remaining
 
   dns_challenge {
     provider = "gcloud"
     config = {
-      GCE_PROJECT = "extenda"
+      GCE_PROJECT = var.dns_project_id
     }
   }
 }
 
 resource google_secret_manager_secret fullchain {
-  secret_id = "tf-managed-wildcard-cert"
+  secret_id = var.secret_id_fullchain
 
   replication {
     user_managed {
@@ -38,7 +38,7 @@ resource google_secret_manager_secret_version fullchain {
 }
 
 resource google_secret_manager_secret privkey {
-  secret_id = "tf-managed-wildcard-privkey"
+  secret_id = var.secret_id_privkey
 
   replication {
     user_managed {

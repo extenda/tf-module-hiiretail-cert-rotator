@@ -18,8 +18,12 @@ terraform {
   }
 }
 
+locals {
+  acme_server_url = var.environment == "production" ? "https://acme-v02.api.letsencrypt.org/directory" : "https://acme-staging-v02.api.letsencrypt.org/directory"
+}
+
 provider "acme" {
-  server_url = "https://acme-staging-v02.api.letsencrypt.org/directory"
+  server_url = local.acme_server_url
 }
 
 provider "google" {
