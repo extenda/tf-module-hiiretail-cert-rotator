@@ -1,12 +1,12 @@
-resource "acme_registration" "reg" {
+resource acme_registration reg {
   email_address   = "itcontracts+acme-certs-module@extendaretail.com"
 }
 
-resource "acme_certificate" "certificate_1" {
+resource acme_certificate certificate {
   account_key_pem           = acme_registration.reg.account_key_pem
   common_name               = var.common_name
   subject_alternative_names = var.subject_alternative_names
-  min_days_remaining = 90 #remove after testing or we will get hit by let's encrypt quota limit
+  min_days_remaining = 30
 
   dns_challenge {
     provider = "gcloud"
@@ -16,30 +16,43 @@ resource "acme_certificate" "certificate_1" {
   }
 }
 
-resource "acme_certificate" "certificate_2" {
-  account_key_pem           = acme_registration.reg.account_key_pem
-  common_name               = var.common_name
-  subject_alternative_names = var.subject_alternative_names
-  min_days_remaining = 60 #remove after testing or we will get hit by let's encrypt quota limit
+resource google_secret_manager_secret fullchain {
+  secret_id = "tf-managed-wildcard-cert"
 
-  dns_challenge {
-    provider = "gcloud"
-    config = {
-      GCE_PROJECT = "extenda"
-    }
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }  
+  }
+
+  topics {
+    name = "projects/${var.project_id}/topics/${var.pubsub_topic}"
   }
 }
 
-resource "google_compute_ssl_certificate" "certificate_1" {
-  name        = "terraform-managed-wildcard-1"
-  description = "created and managed by terraform"
-  private_key = acme_certificate.certificate_1.private_key_pem
-  certificate = "${acme_certificate.certificate_1.certificate_pem}${acme_certificate.certificate_1.issuer_pem}"
+resource google_secret_manager_secret_version fullchain {
+  secret      = google_secret_manager_secret.fullchain.id
+  secret_data = "${acme_certificate.certificate.certificate_pem}${acme_certificate.certificate.issuer_pem}"
 }
 
-resource "google_compute_ssl_certificate" "certificate_2" {
-  name        = "terraform-managed-wildcard-2"
-  description = "created and managed by terraform"
-  private_key = acme_certificate.certificate_2.private_key_pem
-  certificate = "${acme_certificate.certificate_2.certificate_pem}${acme_certificate.certificate_2.issuer_pem}"
+resource google_secret_manager_secret privkey {
+  secret_id = "tf-managed-wildcard-privkey"
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
+  }
+  topics {
+    name = "projects/${var.project_id}/topics/${var.pubsub_topic}"
+  }
+}
+
+resource google_secret_manager_secret_version privkey {
+  secret      = google_secret_manager_secret.privkey.id
+  secret_data = acme_certificate.certificate.private_key_pem
 }
