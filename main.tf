@@ -7,6 +7,7 @@ resource acme_certificate certificate {
   common_name               = var.common_name
   subject_alternative_names = var.subject_alternative_names
   min_days_remaining = var.acme_cert_min_days_remaining
+  revoke_certificate_on_destroy = var.revoke_certificate_on_destroy
 
   dns_challenge {
     provider = "gcloud"

@@ -52,3 +52,9 @@ variable pubsub_topic {
   type        = string
   description = "Name of the Topic where Secret Manager events will be published"
 }
+
+variable revoke_certificate_on_destroy {
+  type        = bool
+  default     = false
+  description = "Revoke certificate upon destroying the previous one"
+}
